@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{{ course.course_code }} - Course Syllabus</title>
+<style>
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 40px; color: #222; line-height: 1.6; }
+.header { text-align: center; border-bottom: 3px solid #7a0c1e; padding-bottom: 12px; margin-bottom: 20px; }
+.header img { width: 60px; vertical-align: middle; margin-right: 10px; }
+.header h1 { display:inline-block; margin: 0; color: #7a0c1e; font-size: 22px; vertical-align:middle;}
+.header h2 { margin: 6px 0 0; color: #555; font-size: 17px; }
+.header .meta { margin-top: 6px; font-size: 12px; color: #666; }
+h3 { color: #7a0c1e; border-left: 4px solid #c9a227; padding-left: 8px; margin-top: 28px; }
+table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 20px; font-size: 13px; }
+th, td { border: 1px solid #ccc; padding: 8px; text-align: left; vertical-align: top; }
+th { background-color: #f6f3ee; color: #7a0c1e; }
+.badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 10px; }
+.badge-k { background-color: #e3f2fd; color: #0d47a1; }
+.badge-s { background-color: #e8f5e9; color: #1b5e20; }
+.badge-a { background-color: #fff3e0; color: #e65100; }
+.badge-period { background-color: #efebe9; color: #3e2723; }
+.badge-exam { background-color: #7a0c1e; color: #fff; }
+ul.llo { list-style-type: none; padding-left: 0; margin: 0; }
+ul.llo li { margin-bottom: 5px; }
+</style>
+</head>
+<body>
+  <div class="header">
+    {% if logo_b64 %}<img src="data:image/png;base64,{{ logo_b64 }}" alt="logo">{% endif %}
+    <h1>College of Computer Studies</h1>
+    <h2>{{ course.course_code }}: {{ course.course_title }}</h2>
+    <div class="meta">{{ course.semester }} &middot; SY {{ course.school_year }} &middot;
+      Section: {{ course.section }} &middot; Instructor: {{ course.instructor }}</div>
+  </div>
+
+  <h3>1. Course Learning Outcomes (CLOs)</h3>
+  <table>
+    <thead><tr><th style="width:8%">CLO #</th><th style="width:18%">Bloom's Level</th><th>Description</th><th style="width:14%">Mapped PLOs</th></tr></thead>
+    <tbody>
+      {% for co in course_outcomes %}
+      <tr>
+        <td><strong>CLO {{ co.clo_number }}</strong></td>
+        <td>{{ co.bloom_level }}</td>
+        <td>{{ co.co_description }}</td>
+        <td>{%- set plos = co.mapped_po.split(',') -%}
+            {%- for p in plos %}PLO {{ p }}{% if not loop.last %}, {% endif %}{% endfor -%}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h3>2. Grading System &amp; Breakdown</h3>
+  <table>
+    <thead><tr><th>Component</th><th>Weight / Share</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Class Standing ({{ course.class_standing_weight }}%)</strong></td>
+        <td>Quizzes ({{ course.quizzes_pct }}%) | Research ({{ course.research_pct }}%) | Seatwork/Lab ({{ course.seatwork_lab_pct }}%)</td>
+      </tr>
+      <tr><td><strong>Major Examination</strong></td><td>{{ course.major_exam_weight }}%</td></tr>
+    </tbody>
+  </table>
+
+  <h3>3. 18-Week Course Schedule &amp; Learning Plan</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:6%">Wk</th><th style="width:16%">Topics</th>
+        <th>Lesson Learning Outcomes (LLOs)</th>
+        <th style="width:16%">Teaching &amp; Learning Activities</th>
+        <th style="width:14%">Assessment &amp; Evidence</th>
+        <th style="width:8%">Aligned CLO</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for wk in weekly_schedule %}
+      <tr>
+        <td><strong>Wk {{ wk.week_number }}</strong><br>
+          <span class="badge {{ 'badge-exam' if 'Examination' in wk.assessment_tool else 'badge-period' }}">{{ wk.period }}</span>
+        </td>
+        <td><strong>{{ wk.topics | join(', ') }}</strong></td>
+        <td>
+          <ul class="llo">
+            {% for l in wk.llos %}
+            <li><span class="badge badge-{{ l.category | lower }}">{{ l.category }}</span> {{ l.outcome_text }}</li>
+            {% endfor %}
+          </ul>
+        </td>
+        <td>{{ wk.teaching_learning_activity }}</td>
+        <td>{{ wk.assessment_tool }}<br><em>{{ wk.evidence }}</em></td>
+        <td>{% for c in wk.aligned_co %}CLO {{ c }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
