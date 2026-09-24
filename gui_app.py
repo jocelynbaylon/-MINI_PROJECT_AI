@@ -35,14 +35,89 @@ OUT_DIR = os.path.join(APP_DIR, "exports")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 
+class RoundedFrame(tk.Canvas):
+    def __init__(self, parent, bg_color, corner_radius=12, expand_content=False, **kwargs):
+        tk.Canvas.__init__(self, parent, bg=parent["bg"], highlightthickness=0, **kwargs)
+        self.corner_radius = corner_radius
+        self.bg_color = bg_color
+        self.expand_content = expand_content
+        
+        self.container = tk.Frame(self, bg=bg_color)
+        self.window_id = self.create_window(0, 0, window=self.container, anchor="nw")
+        
+        self.bind("<Configure>", self._on_resize)
+        self.container.bind("<Configure>", self._on_frame_resize)
+        
+    def _on_frame_resize(self, event):
+        # Only update canvas height if it's different, to avoid loop
+        if int(self.cget("height")) != event.height:
+            self.configure(height=event.height)
+        
+    def _on_resize(self, event):
+        self.delete("bg")
+        w = event.width
+        h = event.height
+        d = self.corner_radius * 2
+        if w < d or h < d: return
+        
+        self.create_oval(0, 0, d, d, fill=self.bg_color, outline=self.bg_color, tags="bg")
+        self.create_oval(w-d, 0, w, d, fill=self.bg_color, outline=self.bg_color, tags="bg")
+        self.create_oval(0, h-d, d, h, fill=self.bg_color, outline=self.bg_color, tags="bg")
+        self.create_oval(w-d, h-d, w, h, fill=self.bg_color, outline=self.bg_color, tags="bg")
+        
+        self.create_rectangle(self.corner_radius, 0, w-self.corner_radius, h, fill=self.bg_color, outline=self.bg_color, tags="bg")
+        self.create_rectangle(0, self.corner_radius, w, h-self.corner_radius, fill=self.bg_color, outline=self.bg_color, tags="bg")
+        self.tag_lower("bg")
+        
+        if self.expand_content:
+            self.itemconfigure(self.window_id, width=w, height=h)
+        else:
+            self.itemconfigure(self.window_id, width=w)
+
+
 class OBEApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("AI-Powered OBE Syllabus Generator - CCS")
         self.geometry("900x700")
         self.minsize(820, 600)
-        self.configure(bg="#eef0f2")
+        self.configure(bg="#f4f0ec")
         self.last_export_path = None
+        
+        style = ttk.Style(self)
+        try: style.theme_use('clam')
+        except: pass
+        style.configure("Treeview", background="#ffffff", foreground="#333333", rowheight=32, 
+                        fieldbackground="#ffffff", borderwidth=0, font=("Segoe UI", 10))
+        style.map("Treeview", background=[('selected', '#8A1538')], foreground=[('selected', 'white')])
+        style.configure("Treeview.Heading", background="#f4f0ec", foreground="#8A1538", 
+                        font=("Segoe UI", 10, "bold"), borderwidth=0)
+        style.configure("TProgressbar", background="#D4AF37", thickness=12)
+        
+        # Modern thin scrollbar without arrows
+        style.layout('Vertical.TScrollbar', 
+            [('Vertical.Scrollbar.trough', 
+                {'children': [('Vertical.Scrollbar.thumb', 
+                               {'expand': '1', 'sticky': 'nswe'})],
+                 'sticky': 'ns'})])
+        style.configure("Vertical.TScrollbar", 
+                     background="#cccccc", 
+                     troughcolor="#ffffff", 
+                     bordercolor="#ffffff",
+                     lightcolor="#cccccc",
+                     darkcolor="#cccccc",
+                     relief="flat")
+        style.configure("TCombobox", 
+                        background="#f9f9f9", 
+                        fieldbackground="#f9f9f9", 
+                        bordercolor="#e0dcd9", 
+                        arrowcolor="#8A1538",
+                        relief="flat")
+        self.option_add('*TCombobox*Listbox.font', ("Segoe UI", 10))
+        self.option_add('*TCombobox*Listbox.background', "#ffffff")
+        self.option_add('*TCombobox*Listbox.foreground', "#333333")
+        self.option_add('*TCombobox*Listbox.selectBackground', "#8A1538")
+        
         self.current_course_code = None
         self._generating = False
         self._gen_queue = queue.Queue()
@@ -80,80 +155,124 @@ class OBEApp(tk.Tk):
         header = tk.Frame(self, bg="#7a0c1e", height=64)
         header.pack(fill="x")
         header.pack_propagate(False)
-        logo_path = os.path.join(APP_DIR, "University_of_Perpetual_Help.png")
+        
+        logo_path = os.path.join(APP_DIR, "uphsd.png")
+        ccs_logo_path = os.path.join(APP_DIR, "ccs.png")
+        
         if HAS_PIL and os.path.exists(logo_path):
             img = Image.open(logo_path).resize((44, 44))
             self._logo_img = ImageTk.PhotoImage(img)
-            tk.Label(header, image=self._logo_img, bg="#7a0c1e").pack(side="left", padx=12)
+            tk.Label(header, image=self._logo_img, bg="#7a0c1e", bd=0).pack(side="left", padx=(12, 0))
+            
+        if HAS_PIL and os.path.exists(ccs_logo_path):
+            img2 = Image.open(ccs_logo_path).resize((44, 44))
+            self._ccs_logo_img = ImageTk.PhotoImage(img2)
+            tk.Label(header, image=self._ccs_logo_img, bg="#7a0c1e", bd=0).pack(side="left", padx=(2, 12))
+            
         tk.Label(header, text="College of Computer Studies — OBE Syllabus Generator",
-                 fg="white", bg="#7a0c1e", font=("Segoe UI", 14, "bold")).pack(side="left", pady=12)
+                 fg="#FFD700", bg="#7a0c1e", font=("Segoe UI", 14, "bold")).pack(side="left", pady=12)
 
     def _build_form(self):
-        panel = tk.LabelFrame(self, text="Course & Class Details", padx=12, pady=12)
-        panel.pack(fill="x", padx=14, pady=10)
+        card_wrap = tk.Frame(self, bg="#f4f0ec")
+        card_wrap.pack(fill="x", padx=20, pady=(15, 5))
+        
+        rounded_card = RoundedFrame(card_wrap, bg_color="#ffffff", corner_radius=15)
+        rounded_card.pack(fill="x")
+        panel = rounded_card.container
+        
+        title = tk.Label(panel, text="Course & Class Details", bg="#ffffff", fg="#8A1538", font=("Segoe UI", 12, "bold"))
+        title.grid(row=0, column=0, columnspan=6, sticky="w", padx=10, pady=(10, 15))
 
         labels = ["Course", "Course Code", "Instructor", "Section", "School Year", "Semester"]
         for i, text in enumerate(labels):
-            tk.Label(panel, text=text).grid(row=i // 3, column=(i % 3) * 2, sticky="w", padx=4, pady=4)
+            tk.Label(panel, text=text, bg="#ffffff", fg="#555555", font=("Segoe UI", 10, "bold")).grid(
+                row=(i // 3) + 1, column=(i % 3) * 2, sticky="w", padx=(10, 4), pady=8)
 
         self.course_var = tk.StringVar()
         self.course_map = {v["title"]: k for k, v in COURSES.items()}
         course_combo = ttk.Combobox(panel, textvariable=self.course_var, state="readonly",
-                                     values=list(self.course_map.keys()), width=32)
+                                     values=list(self.course_map.keys()), width=32, font=("Segoe UI", 10))
         course_combo.current(0)
-        course_combo.grid(row=0, column=1, padx=4, pady=4, sticky="ew")
+        course_combo.grid(row=1, column=1, padx=4, pady=8, sticky="ew")
         course_combo.bind("<<ComboboxSelected>>", self._on_course_change)
 
         self.code_var = tk.StringVar()
-        tk.Entry(panel, textvariable=self.code_var, width=18).grid(row=0, column=3, padx=4, pady=4)
+        tk.Entry(panel, textvariable=self.code_var, width=18, font=("Segoe UI", 10), relief="flat", bg="#f9f9f9", highlightthickness=1, highlightbackground="#e0dcd9").grid(row=1, column=3, padx=4, pady=8)
 
         self.instructor_var = tk.StringVar(value="(Instructor Name)")
-        tk.Entry(panel, textvariable=self.instructor_var, width=22).grid(row=0, column=5, padx=4, pady=4)
+        tk.Entry(panel, textvariable=self.instructor_var, width=22, font=("Segoe UI", 10), relief="flat", bg="#f9f9f9", highlightthickness=1, highlightbackground="#e0dcd9").grid(row=1, column=5, padx=4, pady=8)
 
         self.section_var = tk.StringVar(value="(Section)")
-        tk.Entry(panel, textvariable=self.section_var, width=18).grid(row=1, column=1, padx=4, pady=4)
+        tk.Entry(panel, textvariable=self.section_var, width=18, font=("Segoe UI", 10), relief="flat", bg="#f9f9f9", highlightthickness=1, highlightbackground="#e0dcd9").grid(row=2, column=1, padx=4, pady=8)
 
         self.sy_var = tk.StringVar(value="2026-2027")
-        tk.Entry(panel, textvariable=self.sy_var, width=18).grid(row=1, column=3, padx=4, pady=4)
+        tk.Entry(panel, textvariable=self.sy_var, width=18, font=("Segoe UI", 10), relief="flat", bg="#f9f9f9", highlightthickness=1, highlightbackground="#e0dcd9").grid(row=2, column=3, padx=4, pady=8)
 
         self.sem_var = tk.StringVar(value="1st Semester")
-        ttk.Combobox(panel, textvariable=self.sem_var, state="readonly",
-                     values=["1st Semester", "2nd Semester"], width=16).grid(row=1, column=5, padx=4, pady=4)
-
+        sem_combo = ttk.Combobox(panel, textvariable=self.sem_var, state="readonly",
+                     values=["1st Semester", "2nd Semester"], width=16, font=("Segoe UI", 10))
+        sem_combo.grid(row=2, column=5, padx=4, pady=8)
         self._on_course_change()
 
     def _build_actions(self):
-        bar = tk.Frame(self)
-        bar.pack(fill="x", padx=14, pady=6)
-        self.generate_btn = tk.Button(bar, text="⚙ Generate Syllabus", bg="#7a0c1e", fg="white",
+        bar = tk.Frame(self, bg="#f4f0ec")
+        bar.pack(fill="x", padx=20, pady=6)
+        
+        btn_font = ("Segoe UI", 10, "bold")
+        
+        self.generate_btn = tk.Button(bar, text="⚙ Generate Syllabus", bg="#8A1538", fg="white",
+                                       font=btn_font, relief="flat", padx=10, pady=4, cursor="hand2",
                                        command=self.on_generate)
         self.generate_btn.pack(side="left", padx=4)
-        tk.Button(bar, text="⬇ Download HTML", command=self.on_download_html).pack(side="left", padx=4)
-        tk.Button(bar, text="🖨 Print", command=self.on_print).pack(side="left", padx=4)
-        tk.Button(bar, text="📄 Convert to PDF", bg="#8a6d00", fg="white",
-                  command=self.on_convert_pdf).pack(side="left", padx=4)
+        
+        self.stop_btn = tk.Button(bar, text="⏹ Stop", bg="#555555", fg="white", 
+                                  font=btn_font, relief="flat", padx=10, pady=4, cursor="hand2",
+                                  command=self.on_stop, state="disabled")
+        self.stop_btn.pack(side="left", padx=4)
+        
+        tk.Button(bar, text="⬇ HTML", bg="#ffffff", fg="#333333", font=btn_font, relief="flat", padx=10, pady=4, highlightthickness=1, highlightbackground="#e0dcd9", cursor="hand2", command=self.on_download_html).pack(side="left", padx=4)
+        tk.Button(bar, text="🖨 Print", bg="#ffffff", fg="#333333", font=btn_font, relief="flat", padx=10, pady=4, highlightthickness=1, highlightbackground="#e0dcd9", cursor="hand2", command=self.on_print).pack(side="left", padx=4)
+        tk.Button(bar, text="📄 PDF", bg="#D4AF37", fg="white", font=btn_font, relief="flat", padx=10, pady=4, cursor="hand2", command=self.on_convert_pdf).pack(side="left", padx=4)
+        tk.Button(bar, text="📝 DOCX", bg="#105e26", fg="white", font=btn_font, relief="flat", padx=10, pady=4, cursor="hand2", command=self.on_download_docx).pack(side="left", padx=4)
+        
         self.progress = ttk.Progressbar(bar, mode="indeterminate", length=130)
         self.progress.pack(side="left", padx=12)
 
     def _build_records(self):
-        frame = tk.LabelFrame(self, text="Saved Syllabuses")
-        frame.pack(fill="both", expand=True, padx=14, pady=(10, 4))
+        card_wrap = tk.Frame(self, bg="#f4f0ec")
+        card_wrap.pack(fill="both", expand=True, padx=20, pady=(5, 5))
+        
+        rounded_card = RoundedFrame(card_wrap, bg_color="#ffffff", corner_radius=15, expand_content=True)
+        rounded_card.pack(fill="both", expand=True)
+        frame = rounded_card.container
+        
+        title = tk.Label(frame, text="Saved Syllabuses & Preview", bg="#ffffff", fg="#8A1538", font=("Segoe UI", 12, "bold"))
+        title.pack(anchor="w", padx=10, pady=(10, 0))
 
-        table_area = tk.Frame(frame)
-        table_area.pack(fill="both", expand=True, padx=6, pady=6)
+        self.paned = ttk.PanedWindow(frame, orient="horizontal")
+        self.paned.pack(fill="both", expand=True, padx=10, pady=10)
+
+        left_panel = tk.Frame(self.paned, bg="#ffffff")
+        self.paned.add(left_panel, weight=1)
+
+        self.right_panel = tk.Frame(self.paned, bg="#ffffff")
+        self.paned.add(self.right_panel, weight=1)
+
+        table_area = tk.Frame(left_panel, bg="#ffffff")
+        table_area.pack(fill="both", expand=True)
 
         columns = ("code", "title", "instructor", "section", "sy", "sem", "saved")
         headings = {
             "code": ("Course Code", 90),
-            "title": ("Course Title", 220),
-            "instructor": ("Instructor", 120),
-            "section": ("Section", 80),
-            "sy": ("School Year", 90),
-            "sem": ("Semester", 100),
-            "saved": ("Date Saved", 140),
+            "title": ("Course Title", 200),
+            "instructor": ("Instructor", 100),
+            "section": ("Section", 70),
+            "sy": ("School Year", 80),
+            "sem": ("Semester", 80),
+            "saved": ("Date Saved", 120),
         }
         self.records_tree = ttk.Treeview(table_area, columns=columns, show="headings",
-                                          height=7, selectmode="browse")
+                                          height=7, selectmode="extended")
         for col, (text, width) in headings.items():
             self.records_tree.heading(col, text=text)
             self.records_tree.column(col, width=width, anchor="w")
@@ -166,11 +285,17 @@ class OBEApp(tk.Tk):
         self.records_tree.bind("<Double-1>", lambda e: self.on_preview_selected())
         self.records_tree.bind("<<TreeviewSelect>>", self._on_record_select)
 
-        btns = tk.Frame(frame)
-        btns.pack(fill="x", padx=6, pady=(0, 6))
-        tk.Button(btns, text="🔍 Preview Selected", command=self.on_preview_selected).pack(side="left", padx=4)
-        tk.Button(btns, text="🔄 Refresh List", command=self.refresh_records).pack(side="left", padx=4)
-        tk.Button(btns, text="🗑 Delete Selected", command=self.on_delete_selected).pack(side="left", padx=4)
+        btns = tk.Frame(left_panel, bg="#ffffff")
+        btns.pack(fill="x", pady=(10, 0))
+        btn_font = ("Segoe UI", 9)
+        tk.Button(btns, text="🔍 Preview", font=btn_font, bg="#f9f9f9", fg="#333", relief="flat", highlightthickness=1, highlightbackground="#e0dcd9", cursor="hand2", command=self.on_preview_selected).pack(side="left", padx=4)
+        tk.Button(btns, text="☑ Select All", font=btn_font, bg="#f9f9f9", fg="#333", relief="flat", highlightthickness=1, highlightbackground="#e0dcd9", cursor="hand2", command=self.on_select_all).pack(side="left", padx=4)
+        tk.Button(btns, text="🔄 Refresh", font=btn_font, bg="#f9f9f9", fg="#333", relief="flat", highlightthickness=1, highlightbackground="#e0dcd9", cursor="hand2", command=self.refresh_records).pack(side="left", padx=4)
+        tk.Button(btns, text="🗑 Delete", font=btn_font, bg="#8A1538", fg="white", relief="flat", cursor="hand2", command=self.on_delete_selected).pack(side="left", padx=4)
+
+        self.preview_frame = None
+        self.preview_lbl = tk.Label(self.right_panel, text="Select a syllabus and click Preview", bg="#ffffff", fg="#888888", font=("Segoe UI", 10))
+        self.preview_lbl.pack(expand=True)
 
     def refresh_records(self):
         """Reloads the Saved Syllabuses table from the database, newest first."""
@@ -194,6 +319,10 @@ class OBEApp(tk.Tk):
         if sel:
             self.current_course_code = sel[0]
 
+    def on_select_all(self):
+        for item in self.records_tree.get_children():
+            self.records_tree.selection_add(item)
+
     def on_preview_selected(self):
         sel = self.records_tree.selection()
         if not sel:
@@ -208,24 +337,36 @@ class OBEApp(tk.Tk):
         if not sel:
             messagebox.showinfo("No selection", "Select a syllabus from the list first.")
             return
-        code = sel[0]
-        if not messagebox.askyesno("Confirm delete", f"Delete the saved syllabus '{code}'?\nThis cannot be undone."):
+        if not messagebox.askyesno("Confirm delete", f"Delete {len(sel)} saved syllabus(es)?\nThis cannot be undone."):
             return
         try:
-            db_manager.delete_course(code)
-            if self.current_course_code == code:
-                self.current_course_code = None
-            self._log(f"[OK] Deleted '{code}' from database.")
+            for code in sel:
+                db_manager.delete_course(code)
+                if self.current_course_code == code:
+                    self.current_course_code = None
+            self._log(f"[OK] Deleted {len(sel)} record(s) from database.")
             self.refresh_records()
+            if self.preview_frame:
+                self.preview_frame.destroy()
+                self.preview_frame = None
+                self.preview_lbl.pack(expand=True)
         except Exception as e:
-            self._log(f"[ERROR] Could not delete '{code}': {e}")
+            self._log(f"[ERROR] Could not delete: {e}")
 
     def _build_log(self):
-        frame = tk.LabelFrame(self, text="Activity Log")
-        frame.pack(fill="x", padx=14, pady=(4, 10))
-        self.log_text = tk.Text(frame, state="disabled", wrap="word", bg="#111", fg="#0f0",
-                                 font=("Consolas", 9), height=6)
-        self.log_text.pack(fill="both", expand=True)
+        card_wrap = tk.Frame(self, bg="#f4f0ec")
+        card_wrap.pack(fill="x", padx=20, pady=(5, 15))
+        
+        rounded_card = RoundedFrame(card_wrap, bg_color="#ffffff", corner_radius=15)
+        rounded_card.pack(fill="x")
+        card = rounded_card.container
+        
+        title = tk.Label(card, text="Activity Log", bg="#ffffff", fg="#8A1538", font=("Segoe UI", 10, "bold"))
+        title.pack(anchor="w", padx=10, pady=(5, 0))
+        
+        self.log_text = tk.Text(card, state="disabled", wrap="word", bg="#1e1e1e", fg="#dcdcdc",
+                                 font=("Consolas", 9), height=5, relief="flat", padx=10, pady=10)
+        self.log_text.pack(fill="both", expand=True, padx=10, pady=(5, 10))
 
     def _log(self, msg: str):
         self.log_text.configure(state="normal")
@@ -250,9 +391,13 @@ class OBEApp(tk.Tk):
         semester = self.sem_var.get()
 
         self._generating = True
-        self.generate_btn.configure(state="disabled", text="⏳ Generating...")
+        self.generate_btn.configure(state="disabled", text="⏳ Generating")
+        self.stop_btn.configure(state="normal")
         self.progress.start(12)
         self._log(f"Generating syllabus for {code} ({COURSES[key]['title']})...")
+
+        self._anim_count = 0
+        self._animate_btn()
 
         # The Ollama call (and any DB write) runs on a background thread so the
         # window stays responsive instead of freezing for the whole request;
@@ -264,6 +409,21 @@ class OBEApp(tk.Tk):
         ).start()
         self.after(100, self._poll_generate_queue)
 
+    def on_stop(self):
+        if self._generating:
+            import llm_engine
+            llm_engine.cancel_generation()
+            self._log("Stopping generation...")
+            self.stop_btn.configure(state="disabled")
+
+    def _animate_btn(self):
+        if not self._generating:
+            return
+        dots = "." * (self._anim_count % 4)
+        self.generate_btn.configure(text=f"⏳ Generating{dots}")
+        self._anim_count += 1
+        self.after(500, self._animate_btn)
+
     def _generate_worker(self, key, code, instructor, section, school_year, semester):
         try:
             payload = generate_course_syllabus(
@@ -272,6 +432,8 @@ class OBEApp(tk.Tk):
             )
             db_manager.upsert_syllabus(payload)
             self._gen_queue.put(("ok", code))
+        except InterruptedError:
+            self._gen_queue.put(("cancel", None))
         except Exception as e:
             self._gen_queue.put(("error", e))
 
@@ -284,6 +446,7 @@ class OBEApp(tk.Tk):
 
         self.progress.stop()
         self.generate_btn.configure(state="normal", text="⚙ Generate Syllabus")
+        self.stop_btn.configure(state="disabled")
         self._generating = False
 
         if status == "ok":
@@ -298,6 +461,9 @@ class OBEApp(tk.Tk):
                 self._preview_in_browser(code)
             except Exception as e:
                 self._log(f"[ERROR] Preview failed: {e}")
+        elif status == "cancel":
+            self._log("[WARNING] Generation cancelled by user.")
+            messagebox.showinfo("Cancelled", "Syllabus generation was cancelled.")
         else:
             e = result
             self._log(f"[ERROR] {e}")
@@ -308,16 +474,20 @@ class OBEApp(tk.Tk):
         export_engine.export_html(code, preview_path)
         self.last_export_path = preview_path
         
-        # Create a new window inside the app for the preview
-        preview_win = tk.Toplevel(self)
-        preview_win.title(f"Syllabus Preview - {code}")
-        preview_win.geometry("900x700")
+        if self.preview_lbl:
+            self.preview_lbl.pack_forget()
+        
+        if self.preview_frame:
+            self.preview_frame.destroy()
+            
+        self.preview_frame = tk.Frame(self.right_panel)
+        self.preview_frame.pack(fill="both", expand=True)
         
         try:
-            html_frame = HtmlFrame(preview_win, messages_enabled=False)
+            html_frame = HtmlFrame(self.preview_frame, messages_enabled=False)
             html_frame.load_file(preview_path)
             html_frame.pack(fill="both", expand=True)
-            self._log(f"[OK] Preview opened inside the application: {code}")
+            self._log(f"[OK] Preview updated for: {code}")
         except Exception as e:
             self._log(f"[ERROR] Could not load internal preview: {e}")
             messagebox.showerror("Preview Error", "Failed to load internal preview.")
@@ -328,38 +498,80 @@ class OBEApp(tk.Tk):
             return None
         return self.current_course_code
 
+    def _show_toast(self, title, message):
+        toast = tk.Toplevel(self)
+        toast.overrideredirect(True)
+        toast.attributes("-topmost", True)
+        toast.configure(bg="#2d2d2d")
+        
+        lbl_title = tk.Label(toast, text=title, font=("Segoe UI", 10, "bold"), bg="#2d2d2d", fg="#D4AF37")
+        lbl_title.pack(anchor="w", padx=15, pady=(10, 2))
+        lbl_msg = tk.Label(toast, text=message, font=("Segoe UI", 9), bg="#2d2d2d", fg="#ffffff")
+        lbl_msg.pack(anchor="w", padx=15, pady=(0, 10))
+        
+        self.update_idletasks()
+        x = self.winfo_x() + self.winfo_width() - toast.winfo_reqwidth() - 20
+        y = self.winfo_y() + 60
+        toast.geometry(f"+{x}+{y}")
+        self.after(3500, toast.destroy)
+
+    def _run_export_thread(self, format_type, export_func, path):
+        self._show_toast("Download Started", f"Exporting syllabus as {format_type}...\nPlease wait.")
+        def worker():
+            try:
+                export_func()
+                self.after(0, lambda: self._on_export_success(format_type, path))
+            except Exception as e:
+                self.after(0, lambda: self._on_export_error(format_type, e))
+        threading.Thread(target=worker, daemon=True).start()
+        
+    def _on_export_success(self, format_type, path):
+        self.last_export_path = path
+        self._log(f"[OK] Exported {format_type} -> {path}")
+        self._show_toast("Download Complete", f"Successfully saved {format_type}!")
+        
+    def _on_export_error(self, format_type, e):
+        self._log(f"[ERROR] {format_type} export failed: {e}")
+        self._show_toast("Download Failed", f"Error exporting {format_type}.")
+        if isinstance(e, ImportError):
+             messagebox.showerror("Missing dependency", str(e))
+        else:
+             messagebox.showerror(f"{format_type} export failed", str(e))
+
     def on_download_html(self):
         code = self._require_course()
-        if not code:
-            return
+        if not code: return
         default_name = f"{code.replace(' ', '_')}_Syllabus.html"
         path = filedialog.asksaveasfilename(defaultextension=".html", initialfile=default_name,
                                              filetypes=[("HTML file", "*.html")])
-        if not path:
-            return
-        export_engine.export_html(code, path)
-        self.last_export_path = path
-        self._log(f"[OK] Saved HTML syllabus -> {path}")
+        if not path: return
+        def run_export():
+            export_engine.export_html(code, path)
+        self._run_export_thread("HTML", run_export, path)
+
+    def on_download_docx(self):
+        code = self._require_course()
+        if not code: return
+        default_name = f"{code.replace(' ', '_')}_Syllabus.docx"
+        path = filedialog.asksaveasfilename(defaultextension=".docx", initialfile=default_name,
+                                             filetypes=[("Word Document", "*.docx")])
+        if not path: return
+        def run_export():
+            try: export_engine.export_docx(code, path)
+            except ImportError: raise ImportError("python-docx is not installed.\nInstall it with: pip install python-docx")
+        self._run_export_thread("DOCX", run_export, path)
 
     def on_convert_pdf(self):
         code = self._require_course()
-        if not code:
-            return
+        if not code: return
         default_name = f"{code.replace(' ', '_')}_Syllabus.pdf"
         path = filedialog.asksaveasfilename(defaultextension=".pdf", initialfile=default_name,
                                              filetypes=[("PDF file", "*.pdf")])
-        if not path:
-            return
-        try:
-            export_engine.export_pdf(code, path)
-            self.last_export_path = path
-            self._log(f"[OK] Exported PDF -> {path}")
-        except ImportError:
-            self._log("[ERROR] xhtml2pdf is not installed. Run: pip install xhtml2pdf")
-            messagebox.showerror("Missing dependency", "Install it with:\n\npip install xhtml2pdf")
-        except Exception as e:
-            self._log(f"[ERROR] PDF export failed: {e}")
-            messagebox.showerror("PDF export failed", str(e))
+        if not path: return
+        def run_export():
+            try: export_engine.export_pdf(code, path)
+            except ImportError: raise ImportError("xhtml2pdf is not installed.\nInstall it with: pip install xhtml2pdf")
+        self._run_export_thread("PDF", run_export, path)
 
     def on_print(self):
         if not self.last_export_path or not os.path.exists(self.last_export_path):

@@ -85,7 +85,11 @@ def _ollama_reachable() -> bool:
 
 
 _mock_mode_cache = {"value": None}
+CANCEL_FLAG = False
 
+def cancel_generation():
+    global CANCEL_FLAG
+    CANCEL_FLAG = True
 
 def is_mock_mode(force_refresh: bool = False) -> bool:
     """Lazily checks (and caches) whether the local Ollama server is reachable.
@@ -102,18 +106,35 @@ def is_mock_mode(force_refresh: bool = False) -> bool:
 
 
 def _call_ollama(user_prompt: str) -> str:
+    global CANCEL_FLAG
+    CANCEL_FLAG = False
+    
     payload = {
         "model": MODEL_NAME,
         "system": SYSTEM_PROMPT,
         "prompt": user_prompt,
         "format": "json",
-        "stream": False,
-        "options": {"temperature": 0.2},
+        "stream": True,
+        "options": {
+            "temperature": 0.2,
+            "num_ctx": 1500,
+            "num_predict": 1024,
+            "num_thread": 8
+        },
         "keep_alive": OLLAMA_KEEP_ALIVE,
     }
-    resp = _SESSION.post(f"{OLLAMA_HOST}/api/generate", json=payload, timeout=600)
+    resp = _SESSION.post(f"{OLLAMA_HOST}/api/generate", json=payload, timeout=600, stream=True)
     resp.raise_for_status()
-    return resp.json()["response"]
+    
+    full_response = []
+    for line in resp.iter_lines():
+        if CANCEL_FLAG:
+            raise InterruptedError("Generation cancelled by user.")
+        if line:
+            chunk = json.loads(line)
+            full_response.append(chunk.get("response", ""))
+            
+    return "".join(full_response)
 
 
 def warm_up_model():
@@ -163,6 +184,8 @@ def generate_validated(prompt: str, mock_fn) -> OBESyllabusPayload:
     for attempt in range(1, MAX_RETRIES + 1):
         try:
             raw = _call_ollama(live_prompt)
+        except InterruptedError as e:
+            raise e
         except requests.exceptions.RequestException as e:
             last_error = f"Ollama HTTP error: {e}"
             print(f"[WARNING] attempt {attempt}/{MAX_RETRIES}: {e}", file=sys.stderr)

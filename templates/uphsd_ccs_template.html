@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>{{ course.course_code }} - Course Syllabus</title>
 <style>
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 40px; color: #222; line-height: 1.6; }
+body { font-family: 'Segoe UI', Helvetica, Arial, sans-serif; margin: 40px; color: #222; line-height: 1.6; }
 .header { text-align: center; border-bottom: 3px solid #7a0c1e; padding-bottom: 12px; margin-bottom: 20px; }
 .header img { width: 60px; vertical-align: middle; margin-right: 10px; }
 .header h1 { display:inline-block; margin: 0; color: #7a0c1e; font-size: 22px; vertical-align:middle;}
@@ -25,12 +25,19 @@ ul.llo li { margin-bottom: 5px; }
 </style>
 </head>
 <body>
-  <div class="header">
-    {% if logo_b64 %}<img src="data:image/png;base64,{{ logo_b64 }}" alt="logo">{% endif %}
-    <h1>College of Computer Studies</h1>
-    <h2>{{ course.course_code }}: {{ course.course_title }}</h2>
-    <div class="meta">{{ course.semester }} &middot; SY {{ course.school_year }} &middot;
-      Section: {{ course.section }} &middot; Instructor: {{ course.instructor }}</div>
+  <div style="border-bottom: 3px solid #7a0c1e; padding-bottom: 12px; margin-bottom: 20px; text-align: center;">
+    <table style="margin: 0 auto; border: none; width: auto; font-size: 100%; margin-bottom: 0;">
+      <tr>
+        <td style="border: none; padding: 0; vertical-align: middle; text-align: right; background: transparent;">
+          {% if logo_b64 %}<img src="data:image/png;base64,{{ logo_b64 }}" style="width: 55px; margin-right: 15px;" alt="logo">{% endif %}
+        </td>
+        <td style="border: none; padding: 0; vertical-align: middle; text-align: left; background: transparent;">
+          <h1 style="margin: 0; color: #7a0c1e; font-size: 24px; display: block;">College of Computer Studies</h1>
+        </td>
+      </tr>
+    </table>
+    <h2 style="margin: 8px 0 0; color: #555; font-size: 16px;">{{ course.course_code }}: {{ course.course_title }}</h2>
+    <div style="margin-top: 6px; font-size: 12px; color: #666;">{{ course.semester }} &middot; SY {{ course.school_year }} &middot; Section: {{ course.section }} &middot; Instructor: {{ course.instructor }}</div>
   </div>
 
   <h3>1. Course Learning Outcomes (CLOs)</h3>
