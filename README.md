@@ -28,7 +28,7 @@ Outcome-Based Education (OBE) syllabi for 5 subjects:
 pip install -r requirements.txt
 
 # Optional, for real LLM generation instead of the offline generator:
-ollama pull qwen2.5
+ollama pull qwen2.5:3b
 ollama serve
 ```
 
