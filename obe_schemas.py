@@ -21,7 +21,7 @@ NON_MEASURABLE_VERBS = {
 }
 
 
-class CourseOutcomeItem(BaseModel):
+class CourseOutcomeSchema(BaseModel):
     clo_number: int = Field(..., ge=1)
     bloom_level: BLOOM_LEVELS
     co_description: str = Field(..., min_length=10)
@@ -49,7 +49,7 @@ class CourseOutcomeItem(BaseModel):
 
 class CourseOutcomeBatch(BaseModel):
     course_title: str
-    course_outcomes: List[CourseOutcomeItem] = Field(..., min_length=4, max_length=6)
+    course_outcomes: List[CourseOutcomeSchema] = Field(..., min_length=4, max_length=6)
 
 
 class GradingBreakdown(BaseModel):
@@ -81,7 +81,7 @@ class LessonLearningOutcome(BaseModel):
     outcome_text: str = Field(..., min_length=5)
 
 
-class WeeklySchedule(BaseModel):
+class WeeklyScheduleSchema(BaseModel):
     week_number: int = Field(..., ge=1, le=18)
     period: Literal["PRELIM", "MIDTERM", "FINAL"]
     topics: List[str] = Field(..., min_length=1)
@@ -92,16 +92,24 @@ class WeeklySchedule(BaseModel):
     aligned_co: List[int] = Field(..., min_length=1)
 
 
-class OBESyllabusPayload(BaseModel):
+class CourseMetadataSchema(BaseModel):
+    """Static, per-offering course identity fields (as opposed to the
+    dynamically-generated CLOs and weekly schedule below). Kept as its own
+    schema per the Milestone 1 spec; OBESyllabusPayload extends it so every
+    existing payload.course_code / payload.instructor access still works
+    unchanged."""
     course_code: str
     course_title: str
     instructor: str = "(Instructor Name)"
     section: str = "(Section)"
     school_year: str = "2026-2027"
     semester: str = "1st Semester"
-    course_outcomes: List[CourseOutcomeItem]
+
+
+class OBESyllabusPayload(CourseMetadataSchema):
+    course_outcomes: List[CourseOutcomeSchema]
     grading_breakdown: GradingBreakdown
-    weekly_schedule: List[WeeklySchedule]
+    weekly_schedule: List[WeeklyScheduleSchema]
 
     @field_validator("weekly_schedule")
     @classmethod

@@ -5,7 +5,7 @@ Desktop front-end for the OBE Syllabus Generator microservice.
 
 Course dropdown -> input fields (Instructor / Section / School Year / Semester)
 -> [Generate Syllabus] (LLM engine -> Pydantic validation -> SQLite)
--> [Download HTML] / [Convert to PDF] / [Print]
+-> [Download HTML] / [Print] / [Download DOCX]
 """
 
 import os
@@ -232,8 +232,7 @@ class OBEApp(tk.Tk):
         
         tk.Button(bar, text="⬇ HTML", bg="#ffffff", fg="#333333", font=btn_font, relief="flat", padx=10, pady=4, highlightthickness=1, highlightbackground="#e0dcd9", cursor="hand2", command=self.on_download_html).pack(side="left", padx=4)
         tk.Button(bar, text="🖨 Print", bg="#ffffff", fg="#333333", font=btn_font, relief="flat", padx=10, pady=4, highlightthickness=1, highlightbackground="#e0dcd9", cursor="hand2", command=self.on_print).pack(side="left", padx=4)
-        tk.Button(bar, text="📄 PDF", bg="#D4AF37", fg="white", font=btn_font, relief="flat", padx=10, pady=4, cursor="hand2", command=self.on_convert_pdf).pack(side="left", padx=4)
-        tk.Button(bar, text="📝 DOCX", bg="#105e26", fg="white", font=btn_font, relief="flat", padx=10, pady=4, cursor="hand2", command=self.on_download_docx).pack(side="left", padx=4)
+        tk.Button(bar, text="📄 DOCX", bg="#105e26", fg="white", font=btn_font, relief="flat", padx=10, pady=4, cursor="hand2", command=self.on_download_docx).pack(side="left", padx=4)
         
         self.progress = ttk.Progressbar(bar, mode="indeterminate", length=130)
         self.progress.pack(side="left", padx=12)
@@ -560,18 +559,6 @@ class OBEApp(tk.Tk):
             try: export_engine.export_docx(code, path)
             except ImportError: raise ImportError("python-docx is not installed.\nInstall it with: pip install python-docx")
         self._run_export_thread("DOCX", run_export, path)
-
-    def on_convert_pdf(self):
-        code = self._require_course()
-        if not code: return
-        default_name = f"{code.replace(' ', '_')}_Syllabus.pdf"
-        path = filedialog.asksaveasfilename(defaultextension=".pdf", initialfile=default_name,
-                                             filetypes=[("PDF file", "*.pdf")])
-        if not path: return
-        def run_export():
-            try: export_engine.export_pdf(code, path)
-            except ImportError: raise ImportError("xhtml2pdf is not installed.\nInstall it with: pip install xhtml2pdf")
-        self._run_export_thread("PDF", run_export, path)
 
     def on_print(self):
         if not self.last_export_path or not os.path.exists(self.last_export_path):

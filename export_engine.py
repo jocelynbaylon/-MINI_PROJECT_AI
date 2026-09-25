@@ -3,8 +3,8 @@ export_engine.py
 -----------------
 Queries SQLite by course_code (via db_manager) and compiles the record into
 the official CCS syllabus layout using Jinja2, producing a browser-ready
-HTML file. export_pdf() converts that HTML to PDF with xhtml2pdf (pure
-Python -- no external wkhtmltopdf binary required).
+HTML file. export_docx() converts the same data into a formatted Word
+document using python-docx.
 """
 
 import os
@@ -57,16 +57,6 @@ def export_html(course_code: str, out_path: str) -> str:
         f.write(html)
     return out_path
 
-
-def export_pdf(course_code: str, out_path: str) -> str:
-    """Converts the rendered syllabus HTML into a PDF file using xhtml2pdf."""
-    from xhtml2pdf import pisa  # imported lazily so the HTML-only path never needs it
-    html = render_html(course_code)
-    with open(out_path, "wb") as f:
-        result = pisa.CreatePDF(src=html, dest=f)
-    if result.err:
-        raise RuntimeError(f"xhtml2pdf reported {result.err} error(s) while rendering {course_code}.")
-    return out_path
 
 def export_docx(course_code: str, out_path: str) -> str:
     """Converts the syllabus data into a beautiful DOCX file using python-docx."""
@@ -235,13 +225,13 @@ def export_docx(course_code: str, out_path: str) -> str:
 if __name__ == "__main__":
     import sys
     if len(sys.argv) < 2:
-        print("Usage: python export_engine.py <COURSE_CODE> [html|pdf]")
+        print("Usage: python export_engine.py <COURSE_CODE> [html|docx]")
         sys.exit(1)
     code = sys.argv[1]
     fmt = sys.argv[2] if len(sys.argv) > 2 else "html"
     out = f"{code.replace(' ', '_')}_Syllabus.{fmt}"
-    if fmt == "pdf":
-        export_pdf(code, out)
+    if fmt == "docx":
+        export_docx(code, out)
     else:
         export_html(code, out)
     print(f"Exported -> {out}")

@@ -1,0 +1,301 @@
+{
+  "course_code": "CS 201",
+  "course_title": "Data Structures and Algorithms",
+  "instructor": "(Instructor Name)",
+  "section": "(Section)",
+  "school_year": "2026-2027",
+  "semester": "1st Semester",
+  "course_outcomes": [
+    {
+      "clo_number": 1,
+      "bloom_level": "Remember/Understand",
+      "co_description": "Explain the time and space complexity trade-offs of common linear and non-linear data structures.",
+      "mapped_po": [1]
+    },
+    {
+      "clo_number": 2,
+      "bloom_level": "Apply/Analyze",
+      "co_description": "Implement arrays, linked lists, stacks, and queues to solve structured programming problems.",
+      "mapped_po": [2, 3]
+    },
+    {
+      "clo_number": 3,
+      "bloom_level": "Apply/Analyze",
+      "co_description": "Apply tree and graph traversal algorithms to search and organize hierarchical and networked data.",
+      "mapped_po": [2, 3]
+    },
+    {
+      "clo_number": 4,
+      "bloom_level": "Apply/Analyze",
+      "co_description": "Analyze sorting and searching algorithms using Big-O notation to select the most efficient approach for a given dataset.",
+      "mapped_po": [1, 3]
+    },
+    {
+      "clo_number": 5,
+      "bloom_level": "Evaluate/Create",
+      "co_description": "Design and implement an original algorithmic solution to a real-world data-processing problem as a capstone project.",
+      "mapped_po": [3, 5]
+    }
+  ],
+  "grading_breakdown": {
+    "quizzes_pct": 30.0,
+    "research_pct": 20.0,
+    "seatwork_lab_pct": 50.0,
+    "class_standing_weight": 70.0,
+    "major_exam_weight": 30.0
+  },
+  "weekly_schedule": [
+    {
+      "week_number": 1,
+      "period": "PRELIM",
+      "topics": ["Course Orientation & Introduction to Data Structures"],
+      "llos": [
+        {"category": "K", "outcome_text": "Identify the course objectives, key topics, and assessment methods."},
+        {"category": "S", "outcome_text": "Demonstrate correct setup of the Python/C++ development environment."},
+        {"category": "A", "outcome_text": "Value precision in following course requirements and academic policies."}
+      ],
+      "teaching_learning_activity": "Lecture, Discussion & Environment Setup",
+      "assessment_tool": "Recitation",
+      "evidence": "Reflection Log",
+      "aligned_co": [1]
+    },
+    {
+      "week_number": 2,
+      "period": "PRELIM",
+      "topics": ["Algorithm Analysis & Big-O Notation"],
+      "llos": [
+        {"category": "K", "outcome_text": "Define time complexity and space complexity using Big-O notation."},
+        {"category": "S", "outcome_text": "Compute the Big-O complexity of simple code snippets."},
+        {"category": "A", "outcome_text": "Value analytical rigor when comparing algorithm efficiency."}
+      ],
+      "teaching_learning_activity": "Lecture & Board Work",
+      "assessment_tool": "Quiz",
+      "evidence": "Quiz Results",
+      "aligned_co": [1, 4]
+    },
+    {
+      "week_number": 3,
+      "period": "PRELIM",
+      "topics": ["Arrays and Dynamic Arrays"],
+      "llos": [
+        {"category": "K", "outcome_text": "Describe the memory layout of static and dynamic arrays."},
+        {"category": "S", "outcome_text": "Implement array insertion, deletion, and resizing operations."},
+        {"category": "A", "outcome_text": "Demonstrate diligence in tracing array operations by hand."}
+      ],
+      "teaching_learning_activity": "Lecture, Discussion & Hands-on Laboratory Exercise",
+      "assessment_tool": "Seatwork",
+      "evidence": "Lab Output",
+      "aligned_co": [2]
+    },
+    {
+      "week_number": 4,
+      "period": "PRELIM",
+      "topics": ["Singly and Doubly Linked Lists"],
+      "llos": [
+        {"category": "K", "outcome_text": "Explain the structure of singly and doubly linked lists."},
+        {"category": "S", "outcome_text": "Implement node insertion, deletion, and traversal for linked lists."},
+        {"category": "A", "outcome_text": "Show commitment to writing clean, well-commented pointer logic."}
+      ],
+      "teaching_learning_activity": "Lecture, Discussion & Hands-on Laboratory Exercise",
+      "assessment_tool": "Seatwork",
+      "evidence": "Lab Output",
+      "aligned_co": [2]
+    },
+    {
+      "week_number": 5,
+      "period": "PRELIM",
+      "topics": ["Stacks and Queues"],
+      "llos": [
+        {"category": "K", "outcome_text": "Explain the LIFO and FIFO principles behind stacks and queues."},
+        {"category": "S", "outcome_text": "Implement a stack and a queue using arrays and linked lists."},
+        {"category": "A", "outcome_text": "Value structured problem decomposition when applying stacks and queues."}
+      ],
+      "teaching_learning_activity": "Lecture, Discussion & Hands-on Laboratory Exercise",
+      "assessment_tool": "Seatwork & Lab Rubric",
+      "evidence": "Output & Executable Artifact",
+      "aligned_co": [2, 4]
+    },
+    {
+      "week_number": 6,
+      "period": "PRELIM",
+      "topics": ["Prelim Examination"],
+      "llos": [
+        {"category": "K", "outcome_text": "Recall and synthesize key concepts covered in Weeks 1-5."},
+        {"category": "S", "outcome_text": "Apply learned skills to solve assessment items accurately."},
+        {"category": "A", "outcome_text": "Demonstrate academic integrity and diligence during examination."}
+      ],
+      "teaching_learning_activity": "Written/Practical Examination",
+      "assessment_tool": "Examination Paper",
+      "evidence": "Exam Results",
+      "aligned_co": [1]
+    },
+    {
+      "week_number": 7,
+      "period": "MIDTERM",
+      "topics": ["Recursion and Divide-and-Conquer"],
+      "llos": [
+        {"category": "K", "outcome_text": "Explain the mechanics of recursive function calls and base cases."},
+        {"category": "S", "outcome_text": "Implement recursive solutions using the divide-and-conquer strategy."},
+        {"category": "A", "outcome_text": "Demonstrate persistence in tracing and debugging recursive calls."}
+      ],
+      "teaching_learning_activity": "Lecture, Discussion & Hands-on Laboratory Exercise",
+      "assessment_tool": "Seatwork",
+      "evidence": "Lab Output",
+      "aligned_co": [2, 4]
+    },
+    {
+      "week_number": 8,
+      "period": "MIDTERM",
+      "topics": ["Binary Trees & Binary Search Trees"],
+      "llos": [
+        {"category": "K", "outcome_text": "Describe the structure and properties of binary search trees."},
+        {"category": "S", "outcome_text": "Implement insertion, deletion, and lookup operations on a BST."},
+        {"category": "A", "outcome_text": "Value organized, hierarchical thinking when modeling tree data."}
+      ],
+      "teaching_learning_activity": "Lecture, Discussion & Hands-on Laboratory Exercise",
+      "assessment_tool": "Seatwork & Lab Rubric",
+      "evidence": "Output & Executable Artifact",
+      "aligned_co": [3]
+    },
+    {
+      "week_number": 9,
+      "period": "MIDTERM",
+      "topics": ["Tree Traversal Algorithms"],
+      "llos": [
+        {"category": "K", "outcome_text": "Differentiate in-order, pre-order, and post-order traversal strategies."},
+        {"category": "S", "outcome_text": "Implement recursive and iterative tree traversal algorithms."},
+        {"category": "A", "outcome_text": "Demonstrate patience in verifying traversal output against expected results."}
+      ],
+      "teaching_learning_activity": "Lecture, Discussion & Hands-on Laboratory Exercise",
+      "assessment_tool": "Quiz, Seatwork & Lab Rubric",
+      "evidence": "Output, Report & Executable Artifact",
+      "aligned_co": [3]
+    },
+    {
+      "week_number": 10,
+      "period": "MIDTERM",
+      "topics": ["Heaps and Priority Queues"],
+      "llos": [
+        {"category": "K", "outcome_text": "Explain the heap property and its use in priority queues."},
+        {"category": "S", "outcome_text": "Implement a min-heap and max-heap with insert and extract operations."},
+        {"category": "A", "outcome_text": "Value efficiency when selecting a data structure for priority-based tasks."}
+      ],
+      "teaching_learning_activity": "Lecture, Discussion & Hands-on Laboratory Exercise",
+      "assessment_tool": "Seatwork",
+      "evidence": "Lab Output",
+      "aligned_co": [3, 4]
+    },
+    {
+      "week_number": 11,
+      "period": "MIDTERM",
+      "topics": ["Hash Tables"],
+      "llos": [
+        {"category": "K", "outcome_text": "Explain hashing functions and collision resolution strategies."},
+        {"category": "S", "outcome_text": "Implement a hash table using chaining and open addressing."},
+        {"category": "A", "outcome_text": "Demonstrate diligence in testing edge cases such as hash collisions."}
+      ],
+      "teaching_learning_activity": "Lecture, Discussion & Hands-on Laboratory Exercise",
+      "assessment_tool": "Quiz, Seatwork & Lab Rubric",
+      "evidence": "Output, Report & Executable Artifact",
+      "aligned_co": [2, 4]
+    },
+    {
+      "week_number": 12,
+      "period": "MIDTERM",
+      "topics": ["Midterm Examination"],
+      "llos": [
+        {"category": "K", "outcome_text": "Recall and synthesize key concepts covered in Weeks 7-11."},
+        {"category": "S", "outcome_text": "Apply learned skills to solve assessment items accurately."},
+        {"category": "A", "outcome_text": "Demonstrate academic integrity and diligence during examination."}
+      ],
+      "teaching_learning_activity": "Written/Practical Examination",
+      "assessment_tool": "Examination Paper",
+      "evidence": "Exam Results",
+      "aligned_co": [1]
+    },
+    {
+      "week_number": 13,
+      "period": "FINAL",
+      "topics": ["Graph Representations"],
+      "llos": [
+        {"category": "K", "outcome_text": "Describe adjacency list and adjacency matrix graph representations."},
+        {"category": "S", "outcome_text": "Implement a graph data structure supporting both representations."},
+        {"category": "A", "outcome_text": "Value clarity when modeling real-world networks as graphs."}
+      ],
+      "teaching_learning_activity": "Lecture, Discussion & Hands-on Laboratory Exercise",
+      "assessment_tool": "Seatwork",
+      "evidence": "Lab Output",
+      "aligned_co": [3]
+    },
+    {
+      "week_number": 14,
+      "period": "FINAL",
+      "topics": ["Graph Traversal: BFS & DFS"],
+      "llos": [
+        {"category": "K", "outcome_text": "Explain the mechanics of breadth-first and depth-first graph traversal."},
+        {"category": "S", "outcome_text": "Implement BFS and DFS to solve connectivity and pathfinding problems."},
+        {"category": "A", "outcome_text": "Demonstrate persistence in debugging traversal edge cases such as cycles."}
+      ],
+      "teaching_learning_activity": "Lecture, Discussion & Hands-on Laboratory Exercise",
+      "assessment_tool": "Seatwork & Lab Rubric",
+      "evidence": "Output & Executable Artifact",
+      "aligned_co": [3, 4]
+    },
+    {
+      "week_number": 15,
+      "period": "FINAL",
+      "topics": ["Sorting Algorithms I: Bubble, Insertion, Selection Sort"],
+      "llos": [
+        {"category": "K", "outcome_text": "Analyze the time complexity of elementary sorting algorithms."},
+        {"category": "S", "outcome_text": "Implement bubble sort, insertion sort, and selection sort."},
+        {"category": "A", "outcome_text": "Value systematic comparison when benchmarking algorithm performance."}
+      ],
+      "teaching_learning_activity": "Lecture, Discussion & Hands-on Laboratory Exercise",
+      "assessment_tool": "Quiz, Seatwork & Lab Rubric",
+      "evidence": "Output, Report & Executable Artifact",
+      "aligned_co": [4]
+    },
+    {
+      "week_number": 16,
+      "period": "FINAL",
+      "topics": ["Sorting Algorithms II: Merge Sort & Quick Sort"],
+      "llos": [
+        {"category": "K", "outcome_text": "Analyze the divide-and-conquer approach used in merge sort and quick sort."},
+        {"category": "S", "outcome_text": "Implement merge sort and quick sort and compare their performance."},
+        {"category": "A", "outcome_text": "Demonstrate collaboration in pair-programming algorithm benchmarks."}
+      ],
+      "teaching_learning_activity": "Lecture, Discussion & Hands-on Laboratory Exercise",
+      "assessment_tool": "Seatwork & Lab Rubric",
+      "evidence": "Output & Executable Artifact",
+      "aligned_co": [4]
+    },
+    {
+      "week_number": 17,
+      "period": "FINAL",
+      "topics": ["Capstone Algorithm Project Development & Presentation"],
+      "llos": [
+        {"category": "K", "outcome_text": "Justify the choice of data structures and algorithms used in the capstone project."},
+        {"category": "S", "outcome_text": "Build and present a working solution to a real-world data-processing problem."},
+        {"category": "A", "outcome_text": "Demonstrate professionalism and ownership when presenting project work."}
+      ],
+      "teaching_learning_activity": "Project Development & Peer Presentation",
+      "assessment_tool": "Project Defense Rubric",
+      "evidence": "Capstone Project & Report",
+      "aligned_co": [5]
+    },
+    {
+      "week_number": 18,
+      "period": "FINAL",
+      "topics": ["Final Examination"],
+      "llos": [
+        {"category": "K", "outcome_text": "Recall and synthesize key concepts covered across the entire term."},
+        {"category": "S", "outcome_text": "Apply learned skills to solve comprehensive assessment items accurately."},
+        {"category": "A", "outcome_text": "Demonstrate academic integrity and diligence during examination."}
+      ],
+      "teaching_learning_activity": "Written/Practical Examination",
+      "assessment_tool": "Examination Paper",
+      "evidence": "Exam Results",
+      "aligned_co": [5]
+    }
+  ]
+}
